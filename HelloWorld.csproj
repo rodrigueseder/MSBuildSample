@@ -1,0 +1,52 @@
+
+<!-- @(ItemType) to access build items
+     %(ItemType.MetaDataName) to access build item metadata
+     $(PropertyName) to access build properties 
+     $(Path) to access environments variables -->
+
+<!-- Setting the default Target and XML schema -->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003"> 
+  
+  <PropertyGroup>
+    <!-- Set the application name as a property --> 
+    <AssemblyName>MSBuildSample</AssemblyName>
+
+    <!-- Set the binaries folder as a property, it is better to put the back slash (\) here than on OutputAssembly -->
+    <OutputPath>Bin\</OutputPath>  
+  </PropertyGroup>
+
+  <!-- Specify the inputs by type and file name -->  
+  <ItemGroup> 
+    <Compile Include="helloworld.cs" /> 
+  </ItemGroup>
+
+  <Target Name="Clean" >
+    <!-- Delete task to delete the application file-->
+    <Delete Files="$(OutputPath)$(AssemblyName).exe" />
+  </Target>
+
+  <!-- Build target, it is Incremental due to Inputs/Outputs property. 
+  This specifies that the Build target depends on the input files that are specified in the Compile item group, 
+  and that the output target is the application file. 
+  It runs only if the source files or target files that the target depends on have changed.
+  MSBuild uses the time stamp of a file to determine whether it has changed.-->
+  <Target Name="Build" Inputs="@(Compile)" Outputs="$(OutputPath)$(AssemblyName).exe">
+
+    <!-- Creating a folder that is named by the OutputPath property -->
+    <MakeDir Directories="$(OutputPath)" Condition="!Exists('$(OutputPath)')" />
+
+    <!-- Run the Visual C# compilation, using input files of item group Compile and outputting as defined by properties -->
+    <Csc Sources="@(Compile)" OutputAssembly="$(OutputPath)$(AssemblyName).exe">
+      <!-- Set the OutputAssembly attribute of the CSC task  
+      to the name of the executable file that is created -->
+      <Output TaskParameter = "OutputAssembly" ItemName = "EXEFile" />
+    </Csc>
+
+    <!-- Log the file name of the output file -->  
+    <Message Text="The output file is @(EXEFile)"/>
+  </Target>
+
+  <!-- The Rebuild target does not run until both the Clean target and the Build target have run. 
+  Although the Rebuild target has no tasks, it causes the Clean target to run before the Build target -->
+  <Target Name="Rebuild" DependsOnTargets="Clean;Build" />  
+</Project>
